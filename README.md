@@ -21,6 +21,11 @@ These things are configured for you:
     - Handles multipart form data.
 
 # Make it yours!
+
+[Create a template](https://github.com/Arlodotexe/nexpress-boilerplate/generate)  via Github
+
+Or do it yourself:
+
 1. Clone the repo
 2. Delete the `.git` folder
 3. Modify it however you want!
