@@ -83,7 +83,7 @@ function SetupAPI() {
                 }
 
                 // Reformat route params from folder-friendly to express spec
-                serverPath = serverPath.replace(/{([^\/]+)}/g, ":$1");
+                serverPath = serverPath.replace(/{([^\/]+?)}/g, ":$1");
 
                 if (devEnv) serverPath = serverPath.replace(__dirname.replace(/\\/g, `/`).replace(buildPath, ""), "");
 
