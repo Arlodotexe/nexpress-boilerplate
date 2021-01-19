@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction, RequestHandler } from "express";
 import cors from "cors";
 import express from 'express';
 import expressWs from 'express-ws';
@@ -19,7 +19,7 @@ const app = express(); // Casting needed for websocket
  * The file `./src/api/data/bugreport/post.js` is set up at `POST https://example.com/data/bugreport/`
  */
 
- //#region Express setup
+//#region Express setup
 
 // Websocket support
 expressWs(app);
@@ -66,16 +66,19 @@ function SetupAPI() {
             if (!filePath.includes("node_modules") && helpers.match(filePath, HttpMethodsRegex)) {
                 let serverPath = filePath
                     .replace(HttpMethodsRegex, "")
-                    .replace("/app", "") // Remove first instance of "/app" on the server, for heroku hosting
                     .replace(apiPath, "")
                     .replace(buildPath, "");
 
                 if (helpers.match(serverPath, /{(.+)}\/?$/)) {
-                    // Check paths with route params for sibling folders  
+                    // Check paths with route params for sibling folders
                     const folderPath = filePath.replace(/{.+}(.+)$/, "\/\*\/");
+
                     glob(folderPath, (err: Error | null, siblingDir: string[]) => {
-                        if(err) throw err;
-                        if (siblingDir.length > 1) throw new Error("Folder representing a route parameter cannot have sibling folders: " + folderPath);
+                        if (err)
+                            throw err;
+
+                        if (siblingDir.length > 1)
+                            throw new Error(`Folder representing a route parameter cannot have sibling folders (at ${folderPath})`);
                     });
                 }
 
@@ -89,24 +92,38 @@ function SetupAPI() {
 
                 console.log(`Setting up ${filePath} as ${method.toUpperCase()} ${serverPath}`);
 
+                const importedModule = await import(filePath);
+                
+                if(!importedModule.default)
+                    throw "Error: no default export was defined in " + filePath;
+
+                const requestHandlers: RequestHandler[] = [importedModule.default];
+
+                // Add file-defined middlewhere here.
+                // Middleware must be inserted before any importedModule.default handler.
+                if (importedModule.multipartOptions) {
+                    requestHandlers.splice(0, 0, importedModule.multipartOptions);
+                }
+
                 switch (method) {
                     case "post":
-                        app.post(serverPath, await import(filePath));
+                        app.post(serverPath, requestHandlers);
                         break;
                     case "get":
-                        app.get(serverPath, await import(filePath));
+                        app.get(serverPath, requestHandlers);
                         break;
                     case "put":
-                        app.put(serverPath, await import(filePath));
+                        app.put(serverPath, requestHandlers);
                         break;
                     case "patch":
-                        app.patch(serverPath, await import(filePath));
+                        app.patch(serverPath, requestHandlers);
                         break;
                     case "delete":
-                        app.delete(serverPath, await import(filePath));
+                        app.delete(serverPath, requestHandlers);
                         break;
                     case "ws":
-                        (app as any).ws(serverPath, (await import(filePath))(expressWs, serverPath));
+                        // Untested
+                        (app as any).ws(serverPath, importedModule.defaut(expressWs, serverPath));
                         break;
                 }
             }

@@ -8,14 +8,20 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Program",
+            "cwd": "${workspaceFolder}/build",
+            "envFile": "${workspaceFolder}/.env",
             "skipFiles": [
-                "<node_internals>/**"
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**/*.js"
             ],
-            "program": "${workspaceFolder}\\build\\index.js",
-            "preLaunchTask": "tsc: build - tsconfig.json",
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
-            ]
+            ],
+            "sourceMaps": true,
+            "program": "${workspaceFolder}/build/index.js",
+            "preLaunchTask": "npm: build",
+            "console": "internalConsole",
+            "trace": true
         }
     ]
 }
