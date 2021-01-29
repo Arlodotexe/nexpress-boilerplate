@@ -66,6 +66,7 @@ function SetupAPI() {
             if (!filePath.includes("node_modules") && helpers.match(filePath, HttpMethodsRegex)) {
                 let serverPath = filePath
                     .replace(HttpMethodsRegex, "")
+                    .replace(process.cwd(), "")
                     .replace(apiPath, "")
                     .replace(buildPath, "");
 
@@ -84,8 +85,6 @@ function SetupAPI() {
 
                 // Reformat route params from folder-friendly to express spec
                 serverPath = serverPath.replace(/{([^\/]+?)}/g, ":$1");
-
-                if (devEnv) serverPath = serverPath.replace(__dirname.replace(/\\/g, `/`).replace(buildPath, ""), "");
 
                 const method = helpers.match(filePath, HttpMethodsRegex);
                 if (!method) continue;
